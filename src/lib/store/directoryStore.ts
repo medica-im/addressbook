@@ -9,7 +9,7 @@ import type { Situation } from './directoryStoreInterface.ts';
 import { facilities } from '$lib/store/facilityStore.ts';
 import { isAuth } from '$lib/store/authStore.ts';
 import { shuffle } from '$lib/helpers/random.ts';
-import type { Entry, Contact } from './directoryStoreInterface.ts';
+import type { Entry, Contact, Type } from './directoryStoreInterface.ts';
 
 export const term = writable("");
 export const selectCommunes = writable([]);
@@ -133,9 +133,9 @@ async function downloadContacts() {
 
 async function fetchEffectors(fetch, next) {
 	const limit = parseInt(PUBLIC_EFFECTORS_LIMIT);
-	let q="";
+	let q = "";
 	if (limit && !next) {
-        q=`?limit=${limit}`
+		q = `?limit=${limit}`
 	}
 	const effectorsUrl = `${variables.BASE_API_URI}/entries/${next || q}`;
 	//console.log(effectorsUrl);
@@ -200,7 +200,7 @@ function changedContacts(contacts, effectors): ChangedObj {
 	return changedObj
 }
 
-export const  downloadAllEffectors = async (fetch) => {
+export const downloadAllEffectors = async (fetch) => {
 	let fetchCounter = 0;
 	let hasMore = true;
 	let next = "";
@@ -296,9 +296,9 @@ export const getEffectors = asyncReadable(
 		var contactsCacheLife = parseInt(PUBLIC_CONTACTS_TTL);
 		let contactsExpired = true;
 		if (localContactsObj) {
-		    contactsExpired = isExpired(localContactsObj, contactsCacheLife);
+			contactsExpired = isExpired(localContactsObj, contactsCacheLife);
 		}
-		if (!contactsExpired && cachedEffectorsObj?.data?.length ) {
+		if (!contactsExpired && cachedEffectorsObj?.data?.length) {
 			return cachedEffectorsObj.data;
 		}
 		let contacts = await downloadContacts();
@@ -346,7 +346,7 @@ export const getAvatars = async () => {
 	});
 	shuffle(carousel);
 	return carousel
-	};
+};
 
 export const distanceEffectors = asyncDerived(
 	([addressFeature, getEffectors]),
@@ -395,10 +395,7 @@ export const categories = asyncDerived(
 	(getEffectors),
 	async ($getEffectors) => {
 		let categories = (
-			uniq($getEffectors.map(function (currentElement) {
-				return currentElement.types.flat()
-			}
-			).flat()).sort(function (a, b) {
+			uniq($getEffectors.map(e=>e.effector_type).flat()).sort(function (a, b) {
 				return a.uid.localeCompare(b.uid);
 			})
 		);
@@ -531,11 +528,7 @@ export const filteredEffectors = asyncDerived(
 				if (!$selectCategories?.length) {
 					return true
 				} else {
-					return x.types.map(
-						function (currentElement) {
-							return currentElement.uid
-						}
-					).some(r => $selectCategories.includes(r))
+					return $selectCategories.includes(x.effector_type.uid)
 				}
 			}).filter(function (x) {
 				if (!$selectCommunes?.length) {
@@ -554,36 +547,12 @@ export const filteredEffectors = asyncDerived(
 	}
 )
 
-export const categorizedCachedEffectors =
-	(cachedEffectors: []) => {
-		//const cachedEffectorsObj = getLocalStorage('effectors');
-		//const cachedEffectors = cachedEffectorsObj?.data;
-		if (!cachedEffectors || !cachedEffectors?.length) {
-			return [];
-		}
-		let categorySet = new Set();
-		for (let effector of cachedEffectors) {
-			effector.types.forEach(x => categorySet.add(x.name))
-		}
-		let categoryArr = Array.from(categorySet);
-		categoryArr.sort();
-		const effectorsObj = categoryArr.reduce((acc, current) => {
-			acc[current] = [];
-			return acc;
-		}, {});
-		for (let effector of cachedEffectors) {
-			effector.types.forEach(x => effectorsObj[x.name].push(effector))
-		}
-		const effectorsMap = new Map(Object.entries(effectorsObj).sort((a, b) => a[1].length - b[1].length));
-		return effectorsMap;
-	};
-
 export const categorizedFilteredEffectors = asyncDerived(
 	([filteredEffectors, distanceEffectors, selectSituation]),
 	async ([$filteredEffectors, $distanceEffectors, $selectSituation]) => {
 		let categorySet = new Set();
 		for (let effector of $filteredEffectors) {
-			effector.types.forEach(x => categorySet.add(x.name))
+			categorySet.add(effector.effector_type.name)
 		}
 		let categoryArr = Array.from(categorySet);
 		categoryArr.sort();
@@ -592,7 +561,7 @@ export const categorizedFilteredEffectors = asyncDerived(
 			return acc;
 		}, {});
 		for (let effector of $filteredEffectors) {
-			effector.types.forEach(x => effectorsObj[x.name].push(effector))
+			effectorsObj[effector.effector_type.name].push(effector)
 		}
 
 		const sortedEffectorsObj = $selectSituation ? Object.entries(effectorsObj).sort((a, b) => a[1].length - b[1].length) : Object.entries(effectorsObj).sort(function (a, b) {
@@ -615,25 +584,34 @@ export const cardinalCategorizedFilteredEffectors = asyncDerived(
 			let countF: number = 0;
 			let countM: number = 0;
 			let countN: number = 0;
-			let type;
+			let countNone: number = 0;
+			let type: Type = value[0].effector_type;
 			value.forEach(
 				(e) => {
-					type = e.types.find(e => e.name == key);
 					if (e.gender == 'F') {
 						countF += 1;
 					} else if (e.gender == 'M') {
 						countM += 1;
 					} else if (e.gender == 'N') {
 						countN += 1;
-					}
+					} else if (e.gender == undefined) {
+					countNone += 1;
+				}
 				}
 			)
-			if (value.length > 1) {
-				if (countF > countM) {
-					label = $effectorTypeLabels[type.uid]['P']['F']
-				} else {
-					label = $effectorTypeLabels[type.uid]['P']['M']
-				}
+			if (value.length == countNone) {
+				if (value.length > 1) {
+				label = $effectorTypeLabels[type.uid]['P']['N']
+			} else {
+				label = $effectorTypeLabels[type.uid]['S']['N']
+			}
+		    } else {
+		 	    if (value.length > 1) {
+					if (countF > countM) {
+						label = $effectorTypeLabels[type.uid]['P']['F']
+					} else {
+						label = $effectorTypeLabels[type.uid]['P']['M']
+					}
 			} else {
 				if (countF > countM) {
 					label = $effectorTypeLabels[type.uid]['S']['F']
@@ -641,78 +619,8 @@ export const cardinalCategorizedFilteredEffectors = asyncDerived(
 					label = $effectorTypeLabels[type.uid]['S']['M']
 				}
 			}
+		}
 			cardinalMap.set(label, value)
-		}
-		return cardinalMap;
-	}
-)
-
-export const categorizedEffectors = asyncDerived(
-	([getEffectors]),
-	async ([$getEffectors]) => {
-		let categorySet = new Set();
-		for (let effector of $getEffectors) {
-			effector.types.forEach(x => categorySet.add(x.name))
-		}
-		let categoryArr = Array.from(categorySet);
-		categoryArr.sort();
-		const effectorsObj = categoryArr.reduce((acc, current) => {
-			acc[current] = [];
-			return acc;
-		}, {});
-		for (let effector of $getEffectors) {
-			effector.types.forEach(x => effectorsObj[x.name].push(effector))
-		}
-		const sortedEffectorsObj = Object.entries(effectorsObj).sort(function (a, b) {
-			return a[0].localeCompare(b[0]);
-		});
-		const effectorsMap = new Map(sortedEffectorsObj);
-		return effectorsMap;
-	}
-)
-
-
-export const cardinalTypes = asyncDerived(
-	([categorizedEffectors, effectorTypeLabels]),
-	async ([$categorizedEffectors, $effectorTypeLabels]) => {
-		let cardinalMap = new Map();
-		for (var [key, value] of $categorizedEffectors) {
-			let label = key;
-			let countF: number = 0;
-			let countM: number = 0;
-			let countN: number = 0;
-			let type;
-			value.forEach(
-				(e) => {
-					type = e.types.find(e => e.name == key);
-					if (e.gender == 'F') {
-						countF += 1;
-					} else if (e.gender == 'M') {
-						countM += 1;
-					} else if (e.gender == 'N') {
-						countN += 1;
-					}
-				}
-			)
-			if (value.length > 1) {
-				if (countF > countM) {
-					label = $effectorTypeLabels[type.uid]['P']['F']
-				} else {
-					label = $effectorTypeLabels[type.uid]['P']['M']
-				}
-			} else {
-				if (countF > countM) {
-					label = $effectorTypeLabels[type.uid]['S']['F']
-				} else {
-					label = $effectorTypeLabels[type.uid]['S']['M']
-				}
-			}
-			let value_dct = {
-				'count': value.length,
-				'slug': type.slug,
-				'uid': type.uid,
-			};
-			cardinalMap.set(label, value_dct)
 		}
 		return cardinalMap;
 	}
@@ -723,7 +631,7 @@ export const categorizedFullFilteredEffectors = asyncDerived(
 	async ($fullFilteredEffectors) => {
 		let categorySet = new Set();
 		for (let effector of $fullFilteredEffectors) {
-			effector.types.forEach(x => categorySet.add(x.name))
+			categorySet.add(effector.effector_type.name)
 		}
 		let catArray = [];
 		let categoryArr = Array.from(categorySet);
@@ -733,7 +641,7 @@ export const categorizedFullFilteredEffectors = asyncDerived(
 			return acc;
 		}, {});
 		for (let effector of $fullFilteredEffectors) {
-			effector.types.forEach(x => effectorsObj[x.name].push(effector))
+			effectorsObj[effector.effector_type.name].push(effector)
 		}
 		const effectorsMap = new Map(Object.entries(effectorsObj).sort((a, b) => a[1].length - b[1].length));
 		return effectorsMap;
@@ -750,7 +658,7 @@ export const categoryOf = derived(
 			return uniq(
 				$fullFilteredEffectors.map(
 					function (x) {
-						return x.types
+						return x.effector_type
 					}
 				).flat()
 			)
@@ -764,9 +672,9 @@ export const categoryOf = derived(
 					}
 				).map(
 					function (x) {
-						return x.types
+						return x.effector_type
 					}
-				).flat()
+				)
 			)
 		}
 	}
@@ -781,9 +689,7 @@ export const communeOf = derived(
 			return uniq(
 				$fullFilteredEffectors.filter(
 					x => {
-						return (!$selectCategories?.length || x.types.map(t => t.uid).some(
-							r => $selectCategories.includes(r)
-						)) && (!$selectFacility || x.facility.uid == $selectFacility)
+						return (!$selectCategories?.length || $selectCategories.includes(x.effector_type.uid)) && (!$selectFacility || x.facility.uid == $selectFacility)
 					}
 				).map(x => x.commune)
 			)
@@ -801,9 +707,8 @@ export const facilityOf = asyncDerived(
 				$fullFilteredEffectors.filter(
 					(x) => {
 						return (
-							(!$selectCategories?.length || x.types.map(t => t.uid).some(
-								r => $selectCategories.includes(r)
-							)) && (!$selectCommunes?.length || $selectCommunes.includes($facilities.find(({ uid }) => uid === x.facility.uid).commune)
+							(!$selectCategories?.length || $selectCategories.includes(x.effector_type.uid)
+							) && (!$selectCommunes?.length || $selectCommunes.includes($facilities.find(({ uid }) => uid === x.facility.uid).commune)
 							))
 					}
 				).map(x => x.facility.uid)

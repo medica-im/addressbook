@@ -76,7 +76,7 @@ export interface Entry {
     phones: Phone[],
     resource_uri: string,
     slug: string,
-    types: Type[],
+    effector_type: Type,
     uid: string,
     updatedAt: number
 }

@@ -64,13 +64,13 @@ export const createEntriesMapData = (entries: Entry[], tooltip = false, target) 
         let tooltipHtml = `
         <b>${entry.address?.tooltip_text || entry.name}</b>
         <br>
-        ${entry.types[0].name}<br>`
+        ${entry.effector_type.name}<br>`
         let popupHtml = `
         <a href="${entryPageUrl(entry)}">
         <b>${entry.address?.tooltip_text || entry.name}</b>
         </a>
         <br>
-        ${entry.types[0].name}<br>`
+        ${entry.effector_type.name}<br>`
         
         points.push({
             latLng: [Number(entry.address?.latitude ?? 0), Number(entry.address?.longitude ?? 0)],

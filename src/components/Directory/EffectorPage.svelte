@@ -12,7 +12,7 @@
 	<div class="space-y-2">
 		<h3 class="h3">{effector.name}</h3>
 
-		<h4 class="h4">{effector.types.map((type) => type.name)}</h4>
+		<h4 class="h4">{effector.effector_type.name}</h4>
 
 		{#if effector.phones?.length}
 			<div><Phones data={effector.phones} /></div>

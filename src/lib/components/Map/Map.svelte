@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { addressFeature } from '$lib/store/directoryStore.ts';
-	import '$lib/assets/leaflet/leaflet.css';
+	import '$assets/leaflet/leaflet.css';
 	import { DEFAULT_TILE_LAYER_OPTIONS, DEFAULT_TILE_URL } from './common.js';
 	import { browser } from '$app/environment';
 	import { Icon, Marker, LeafletMap, TileLayer, Tooltip, Popup } from 'svelte-leafletjs?client';

@@ -1,10 +1,10 @@
 import type { PageLoad } from './$types';
-import { getEffectors } from '$lib/store/directoryStore';
+import { getEffectors } from '$lib/store/directoryStore.ts';
 import { get } from '@square/svelte-store';
-import { variables } from '$lib/utils/constants';
+import { variables } from '$lib/utils/constants.ts';
 
 function findEffector(effectors, params) {
-    return effectors.find(e => e.commune.slug==params.commune && e.types.some(t => t.slug==params.type) && e.slug==params.effector)
+    return effectors.find(e => e.commune.slug==params.commune && e.effector_type.slug==params.type && e.slug==params.effector)
 }
 
 const fetchCareHome = async (fetch, uid) => {
@@ -25,12 +25,14 @@ const fetchCareHome = async (fetch, uid) => {
 }
 
 export const load: PageLoad = async ({ fetch, params }) => {
-    //const effectors = get(getEffectors);
+    console.log(JSON.stringify(params))
     const effectors = await getEffectors.load();
+    //console.log(`effectors:${JSON.stringify(effectors)}`);
+
     let effector = findEffector(effectors, params)
     let component;
     const careHomeSlugArray = ['ehpad', 'usld'];
-    if (effector.types.some(t => careHomeSlugArray.includes(t.slug))) {
+    if (careHomeSlugArray.includes(effector.effector_type.slug)) {
         let careHomeData = await fetchCareHome(fetch, effector.effector_uid);
         effector.careHome=careHomeData;
         if (params.type == "ehpad") {

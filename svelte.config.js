@@ -17,6 +17,7 @@ const config = {
 		adapter: adapter(),
 		alias: {
 			$i18n: './src/i18n',
+			$assets: './src/assets',
 			$components: './src/components',
 			$modals: './src/modals'
 		}

@@ -19,7 +19,7 @@
 
 	const displayTypes = () => {
 		try {
-			return capitalizeFirstLetter(data.effector.types.map((type) => type.name).join(', '), $language);
+			return capitalizeFirstLetter(data.effector.effector_type.name, $language);
 		} catch (error) {
 			console.error(error);
 			return;

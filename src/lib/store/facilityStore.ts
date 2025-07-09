@@ -87,7 +87,7 @@ export const facilityStore = asyncDerived(
 		if (cachedData && !expired && cachedData.data) {
 			return cachedData.data;
 		} else {
-			const apiUrl = `${variables.BASE_API_URI}/facility/${lang}/`;
+			const apiUrl = `${variables.BASE_API_URI}/organization/${lang}/`;
 			const [response, err] = await handleRequestsWithPermissions(fetch, apiUrl);
 			if (response) {
 				let data = response;

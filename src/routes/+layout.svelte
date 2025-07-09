@@ -26,9 +26,9 @@
     import { getCurrentUser, browserGet } from '$lib/utils/requestUtils';
     import { variables } from '$lib/utils/constants';
     import { language } from '$lib/store/languageStore';
-    import favicon from '$lib/assets/favicon.svg';
-    import maskicon from '$lib/assets/mask-icon.svg';
-    import addressbookregular from '$lib/assets/address-book-regular.png';
+    import favicon from '$assets/favicon.svg';
+    import maskicon from '$assets/mask-icon.svg';
+    import addressbookregular from '$assets/address-book-regular.png';
     import { AppShell } from '@skeletonlabs/skeleton';
     import { Modal } from '@skeletonlabs/skeleton';
     import { Toast } from '@skeletonlabs/skeleton';

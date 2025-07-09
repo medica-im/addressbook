@@ -44,7 +44,7 @@ export const reviver = (key, value) => {
   }
 
 export const entryPageUrl = (entry: Entry) => {
-	let typeSlug = entry.types[0].slug;
+	let typeSlug = entry.effector_type.slug;
 	let communeSlug = entry.commune.slug;
 	let nameSlug = entry.slug;
 	//console.log(`${typeSlug}, ${communeSlug}, ${nameSlug}`)

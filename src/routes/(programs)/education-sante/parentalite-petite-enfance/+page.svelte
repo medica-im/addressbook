@@ -3,7 +3,7 @@
 	import { language } from '$lib/store/languageStore';
 	import { capitalizeFirstLetter } from '$lib/helpers/stringHelpers';
 	import { facilityStore } from '$lib/store/facilityStore.ts';
-	import healthProjectPdf from '$lib/assets/projet_de_sante_MSP_Vedene.pdf';
+	import healthProjectPdf from '$assets/projet_de_sante_MSP_Vedene.pdf';
 	import Fa from 'svelte-fa';
 	import {
 		faInfo,
