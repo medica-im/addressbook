@@ -1,3 +1,4 @@
+import { version } from '$app/environment';
 import { writable, derived, readable, get, asyncReadable, asyncDerived } from '@square/svelte-store';
 import { variables } from '$lib/utils/constants.ts';
 import { browser } from "$app/environment"
@@ -291,6 +292,23 @@ async function processCachedEffectors(changedObj: ChangedObj) {
 export const getEffectors = asyncReadable(
 	{},
 	async () => {
+		if (browser) {
+		let localVersion = localStorage.getItem("version");
+		console.log(`localVersion: ${localVersion}`);
+		console.log(`app version: ${version}`);
+		if (!localVersion) {
+			console.log("No local version: clearing localstorage...");
+			localStorage.clear();
+			localStorage.setItem("version", version);
+		}
+		else if (!(localVersion == version)) {
+			console.log(`Local version (${localVersion}) is different from the app version (${version}): clearing localstorage...`);
+			localStorage.clear();
+			localStorage.setItem("version", version);
+		} else {
+			console.log(`Local version (${localVersion}) is up to date with app version (${version}): all good!`);
+		}
+	}
 		const cachedEffectorsObj = getLocalStorage("effectors");
 		let localContactsObj = getLocalStorage("contacts");
 		var contactsCacheLife = parseInt(PUBLIC_CONTACTS_TTL);
